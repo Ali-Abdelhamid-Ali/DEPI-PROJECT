@@ -1,0 +1,5 @@
+Django==5.2.8
+django-bootstrap4==25.3
+django-countries==8.1.1
+pillow==12.0.0
+requests==2.32.5

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load bootstrap4 %}
+
+{% block title %}Create Chat{% endblock %}
+
+{% block body %}
+
+<div class="container mt-5">
+    <h2>Create Chat in {{ category.Category_name }}</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <button class="btn btn-success">Create Chat Session</button>
+    </form>
+</div>
+
+{% endblock %}

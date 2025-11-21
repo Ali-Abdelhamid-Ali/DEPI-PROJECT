@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ chat.get_display_title }} - DevTune{% endblock %}
+
+{% block body %}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+
+    .chat-container {
+        display: flex;
+        height: calc(100vh - 120px);
+        gap: 0;
+        margin-top: 20px;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 280px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 16px 0 0 16px;
+        padding: 20px 0;
+        overflow-y: auto;
+        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-header {
+        padding: 0 20px 20px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .new-chat-btn {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .new-chat-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .chat-history-item {
+        padding: 12px 20px;
+        margin: 4px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-decoration: none;
+        color: #333;
+    }
+
+    .chat-history-item:hover {
+        background: rgba(102, 126, 234, 0.1);
+        transform: translateX(5px);
+    }
+
+    .chat-history-item.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .chat-history-item .chat-title {
+        font-size: 0.9rem;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+    }
+
+    .chat-history-item .chat-date {
+        font-size: 0.75rem;
+        opacity: 0.7;
+    }
+
+    /* Main Chat */
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 0 16px 16px 0;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-header {
+        padding: 20px 30px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-header h4 {
+        margin: 0;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    #chat-box {
+        flex: 1;
+        overflow-y: auto;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .msg-bubble {
+        max-width: 75%;
+        padding: 14px 18px;
+        border-radius: 18px;
+        margin-bottom: 12px;
+        line-height: 1.6;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-user {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 4px;
+    }
+
+    .msg-ai {
+        background: #f0f2f5;
+        color: #333;
+        margin-right: auto;
+        border-bottom-left-radius: 4px;
+    }
+
+    .typing-indicator {
+        display: flex;
+        gap: 6px;
+        padding: 14px 18px;
+        background: #f0f2f5;
+        border-radius: 18px;
+        width: fit-content;
+        margin-right: auto;
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #667eea;
+        animation: typing 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+        30% { transform: translateY(-10px); opacity: 1; }
+    }
+
+    .chat-input-area {
+        padding: 20px 30px;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        background: white;
+    }
+
+    .input-wrapper {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: #f8f9fa;
+        border-radius: 24px;
+        padding: 8px 8px 8px 20px;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .input-wrapper:focus-within {
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+    }
+
+    #message-input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 12px 0;
+        font-size: 1rem;
+        outline: none;
+        resize: none;
+        max-height: 150px;
+    }
+
+    .send-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .send-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.6);
+    }
+
+    .send-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 768px) {
+        .chat-container { flex-direction: column; }
+        .sidebar { width: 100%; border-radius: 16px 16px 0 0; max-height: 200px; }
+        .chat-main { border-radius: 0 0 16px 16px; }
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(102, 126, 234, 0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(102, 126, 234, 0.5); }
+</style>
+
+<div class="container-fluid">
+    <div class="chat-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button class="new-chat-btn" onclick="window.location.href='{% url 'devtune:new_chat' %}'">
+                    <i class="fas fa-plus"></i> New Chat
+                </button>
+            </div>
+            
+            <div class="chat-history">
+                <div style="padding: 10px 20px; font-size: 0.75rem; font-weight: 600; color: #999; text-transform: uppercase;">
+                    Recent Chats
+                </div>
+                {% if user_chats %}
+                    {% for c in user_chats %}
+                    <a href="{% url 'devtune:chat_panel' c.Chat_slug %}" 
+                       class="chat-history-item {% if c.Chat_slug == chat.Chat_slug %}active{% endif %}">
+                        <div>
+                            <div class="chat-title">
+                                <i class="fas fa-message me-1"></i>
+                                {{ c.get_display_title }}
+                            </div>
+                            <div class="chat-date">{{ c.Chat_createdat|date:"M d, H:i" }}</div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <h4>
+                    <i class="fas fa-robot me-2"></i>
+                    {{ chat.get_display_title }}
+                </h4>
+                <small class="text-muted">{{ chat.Chat_category.Category_name }}</small>
+            </div>
+
+            <div id="chat-box"></div>
+
+            <div class="chat-input-area">
+                <form id="chat-form">
+                    {% csrf_token %}
+                    <div class="input-wrapper">
+                        <textarea id="message-input" 
+                                  placeholder="Type your message..." 
+                                  rows="1"
+                                  required></textarea>
+                        <button type="submit" class="send-btn" id="send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const chatbox = document.getElementById("chat-box");
+const sessionId = "{{ chat.Chat_session_id }}";
+const chatSlug = "{{ chat.Chat_slug }}";
+const textarea = document.getElementById("message-input");
+
+// Auto-resize textarea
+textarea.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = this.scrollHeight + 'px';
+});
+
+function addUserMsg(text) {
+    const div = document.createElement('div');
+    div.className = 'msg-bubble msg-user';
+    div.textContent = text;
+    chatbox.appendChild(div);
+    chatbox.scrollTop = chatbox.scrollHeight;
+}
+
+// function addAiMsg(text) {
+//     const div = document.createElement('div');
+//     div.className = 'msg-bubble msg-ai';
+//     div.textContent = text;
+//     chatbox.appendChild(div);
+//     chatbox.scrollTop = chatbox.scrollHeight;
+// }
+
+function addAiMsg(text) {
+    const div = document.createElement('div');
+    div.className = 'msg-bubble msg-ai';
+    
+    // Convert Markdown to HTML
+    div.innerHTML = marked.parse(text);
+    Prism.highlightAllUnder(div);
+
+    chatbox.appendChild(div);
+    chatbox.scrollTop = chatbox.scrollHeight;
+}
+
+
+function showTyping() {
+    const div = document.createElement('div');
+    div.id = 'typing-indicator';
+    div.className = 'typing-indicator';
+    div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+    chatbox.appendChild(div);
+    chatbox.scrollTop = chatbox.scrollHeight;
+}
+
+function hideTyping() {
+    const typing = document.getElementById('typing-indicator');
+    if (typing) typing.remove();
+}
+
+async function loadHistory() {
+    try {
+        const res = await fetch("http://127.0.0.1:5555/DevTune/chat/history", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({
+                username: "{{ request.user.username }}",
+                session_id: sessionId
+            })
+        });
+
+        const data = await res.json();
+        if (data.history) {
+            data.history.forEach(item => {
+                if (item.Human) addUserMsg(item.Human);
+                if (item.AI) addAiMsg(item.AI);
+            });
+        }
+    } catch (err) {
+        console.error("Failed to load history:", err);
+    }
+}
+
+loadHistory();
+
+document.getElementById("chat-form").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    
+    const msg = textarea.value.trim();
+    if (!msg) return;
+    
+    addUserMsg(msg);
+    textarea.value = "";
+    textarea.style.height = 'auto';
+    
+    const sendBtn = document.getElementById("send-btn");
+    sendBtn.disabled = true;
+    showTyping();
+    
+    try {
+        const res = await fetch("{% url 'devtune:send_message_ajax' chat.Chat_slug %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": "{{ csrf_token }}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: "message=" + encodeURIComponent(msg)
+        });
+        
+        const data = await res.json();
+        hideTyping();
+        
+        if (data.response) {
+            addAiMsg(data.response);
+        } else {
+            addAiMsg("⚠️ Error: Unable to get response");
+        }
+    } catch (err) {
+        hideTyping();
+        addAiMsg("⚠️ Connection error. Please try again.");
+        console.error(err);
+    } finally {
+        sendBtn.disabled = false;
+    }
+});
+</script>
+
+{% endblock %}
