@@ -2,8 +2,24 @@ from fastapi import FastAPI
 from routes import base ,chat
 from models.MessageModel import MessageModel
 from helpers.database import engine
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI() 
+app = FastAPI()
+
+origins = [
+    "http://127.0.0.1:8000",  # Django dev server
+    "http://localhost:8000",
+    "*",  # allow all (dev only)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # allow POST, GET, OPTIONS, etc.
+    allow_headers=["*"],
+)
+
 
 @app.on_event("startup")
 async def startup_event():

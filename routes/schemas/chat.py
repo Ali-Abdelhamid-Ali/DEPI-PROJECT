@@ -10,3 +10,8 @@ class ChatRequest(BaseModel):
     chat_history: list = []
     utility_params: dict = {"completion_type": "chat"}
 
+
+class HistoryRequest(BaseModel):
+    username: str = "anonymous"
+    session_id: str = None
+    

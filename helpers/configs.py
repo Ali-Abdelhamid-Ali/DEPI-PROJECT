@@ -18,9 +18,9 @@ class Settings(BaseSettings):
     OLLAMA_MODEL: str
 
         
-    INPUT_DAFAULT_MAX_CHARACTERS : int =1024
-    GENERATION_DAFAULT_MAX_TOKENS : int=200
-    GENERATION_DAFAULT_TEMPERATURE : float =0.1
+    INPUT_DAFAULT_MAX_CHARACTERS : int =1073741824
+    GENERATION_DAFAULT_MAX_TOKENS : int=8192
+    GENERATION_DAFAULT_TEMPERATURE : float =0.3
 
     class Config:
         env_file = ".env"
