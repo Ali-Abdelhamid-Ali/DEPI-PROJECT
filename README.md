@@ -1,4 +1,3 @@
-++ Begin Patch
 # DevTune — Django + FastAPI RAG-powered assistant
 
 DevTune is a full-stack example project providing an AI-based chat and RAG (Retrieval-Augmented Generation) system.
@@ -145,12 +144,3 @@ If you have additional questions about the architecture, feel free to open an is
 ---
 
 License: MIT
-
-++ End Patch
-`conda create -n DJANGO_ENV python=3.11`
-
-`conda activate DJANGO_ENV`
-
-`pip install -r requirements.txt`
-
-`python manage.py runserver`
