@@ -26,7 +26,7 @@ class RAGController(BaseController):
         # Initialize components
         self.document_loader = DocumentLoader()
         self.text_splitter = TextSplitter(
-            chunk_size=self.utility_params.get('chunk_size', 1000),
+            chunk_size=self.utility_params.get('chunk_size', 700),
             chunk_overlap=self.utility_params.get('chunk_overlap', 200),
         )
         self.embeddings_service = EmbeddingsService(config=self.app_settings)
@@ -472,14 +472,18 @@ class RAGController(BaseController):
                 found_count = 0
                 for doc in self.vector_store.documents:
                     md = doc.get('metadata', {})
-                    if md.get('file_name') == file_name:
-                        source = md.get('source') or ''
-                        if source and self.username in source:
-                            # delete this doc
-                            did = doc.get('id')
-                            if did:
-                                self.vector_store.delete_document(did)
-                                found_count += 1
+                    fn = md.get('file_name')
+                    source = md.get('source') or ''
+                    # Match by recorded file_name OR by the source path ending with the provided file_name
+                    if fn == file_name or (source and (source.endswith(file_name) or source.split(os.path.sep)[-1] == file_name)):
+                        # If username is present in metadata, ensure it matches (ownership)
+                        owner = md.get('username')
+                        if owner and self.username and owner != self.username:
+                            continue
+                        did = doc.get('id')
+                        if did:
+                            self.vector_store.delete_document(did)
+                            found_count += 1
                 count = found_count
             return {'success': True, 'deleted_count': count, 'message': f'Deleted {count} documents for file {file_name}'}
         except Exception as e:

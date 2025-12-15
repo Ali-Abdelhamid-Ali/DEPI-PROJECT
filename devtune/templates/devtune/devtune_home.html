@@ -920,7 +920,8 @@ if (openKnowledgeBtnHome) {
                 <div><strong>${title}</strong><div style="font-size:12px; color:#666;">${src}</div><div style="font-size:12px; color:#666;">Indexed: ${indexed ? 'Yes' : 'No'}; Chunks: ${docCount}</div></div>
                 <div style="display:flex; gap:8px;">
                     <button class="btn btn-sm btn-outline-primary" onclick="indexKnowledgeFileHome('${fileNameForIndex}')">Index</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteKnowledgeDocHome('${docIdForDelete}')">Delete</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteKnowledgeDocHome('${docIdForDelete}')">Delete Chunk</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteKnowledgeFileHome('${fileNameForIndex}')">Delete File</button>
                 </div>
             </div>`;
         }).join('');
@@ -930,6 +931,30 @@ if (openKnowledgeBtnHome) {
     window.indexKnowledgeFileHome = async function(fileName) { if (!fileName) { alert('File name not known — try refreshing list'); return; } const fd = new FormData(); fd.append('file_name', fileName); try { const res = await fetch(`{% url 'devtune:rag_index' current_chat.Chat_slug %}`, { method:'POST', headers:{ 'X-CSRFToken': csrftoken }, body: fd }); const data = await res.json(); if (data.success) { alert(data.message || 'Indexed successfully'); listKnowledgeDocsHome(); } else { alert(data.message || 'Indexing failed'); } } catch (err) { alert('Index failed: ' + err); console.error(err); } }
   
     window.deleteKnowledgeDocHome = async function(docId) { if (!confirm('Delete this doc from KB?')) return; const fd = new FormData(); fd.append('doc_id', docId); try { const res = await fetch(`{% url 'devtune:rag_delete' current_chat.Chat_slug %}`, { method:'POST', headers:{ 'X-CSRFToken': csrftoken}, body: fd }); const data = await res.json(); if (data.success) { alert(data.message || 'Deleted'); listKnowledgeDocsHome(); } else { alert('Delete failed'); } } catch (err) { alert('Delete failed: ' + err); console.error(err); } }
+
+    window.deleteKnowledgeFileHome = async function(fileName) {
+        if (!fileName) { alert('File name required for deletion'); return; }
+        if (!confirm('Delete this file and all its KB entries?')) return;
+        const fd = new FormData();
+        fd.append('file_name', fileName);
+        try {
+            const res = await fetch(`{% url 'devtune:rag_delete' current_chat.Chat_slug %}`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken },
+                body: fd
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message || 'File deleted');
+                listKnowledgeDocsHome();
+            } else {
+                alert('Delete failed');
+            }
+        } catch (err) {
+            alert('Delete failed: ' + err);
+            console.error(err);
+        }
+    }
   
     searchBtnHome.addEventListener('click', async function(e) { const q = searchQueryInputHome.value.trim(); if (!q) return; knowledgeListHome.innerHTML = 'Searching...'; const fd = new FormData(); fd.append('query', q); fd.append('top_k', 5); try { const res = await fetch(`{% url 'devtune:rag_search' current_chat.Chat_slug %}`, { method:'POST', headers:{ 'X-CSRFToken': csrftoken }, body: fd }); const data = await res.json(); if (data.results) { renderKnowledgeListHome(data.results); } else { knowledgeListHome.innerHTML = '<div class="text-danger">Search failed</div>'; } } catch (err) { knowledgeListHome.innerHTML = '<div class="text-danger">Search error</div>'; console.error(err);} });
 }

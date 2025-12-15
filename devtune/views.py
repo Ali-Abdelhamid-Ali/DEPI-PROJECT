@@ -403,6 +403,9 @@ def rag_delete(request, slug):
         return JsonResponse({"error": f"Connection error: {str(e)}"}, status=500)
 
 
+
+
+
 @login_required
 def rag_search(request, slug):
     if request.method != "POST":

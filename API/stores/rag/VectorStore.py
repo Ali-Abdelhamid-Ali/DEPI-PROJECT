@@ -407,13 +407,21 @@ class VectorStore:
         try:
             if doc_id in self.id_to_idx:
                 idx = self.id_to_idx[doc_id]
-                # Mark as deleted by clearing content
+                # Preserve existing metadata where possible and mark as deleted
+                existing = self.documents[idx] if idx < len(self.documents) else {'id': doc_id, 'content': '', 'metadata': {}}
+                meta = existing.get('metadata', {}) or {}
+                meta['deleted'] = True
+                # Clear content but keep metadata (username, file_name, etc.) so ownership/filtering still works
                 self.documents[idx] = {
                     'id': doc_id,
                     'content': '',
-                    'metadata': {'deleted': True}
+                    'metadata': meta
                 }
-                del self.id_to_idx[doc_id]
+                # Remove id mapping so this id is no longer considered active
+                try:
+                    del self.id_to_idx[doc_id]
+                except Exception:
+                    pass
                 # For chroma, remove from collection by id
                 if self.backend == 'chroma' and self._chroma_collection is not None:
                     try:
@@ -447,10 +455,15 @@ class VectorStore:
             count = 0
             if filter_metadata:
                 for doc_id, idx in list(self.id_to_idx.items()):
+                    # guard index bounds
+                    if idx < 0 or idx >= len(self.documents):
+                        continue
                     doc = self.documents[idx]
+                    md = doc.get('metadata', {}) or {}
+                    # Use string comparison for robustness
                     match = all(
-                        doc['metadata'].get(k) == v 
-                        for k, v in filter_metadata.items()
+                        str(md.get(k)) == str(v)
+                        for k, v in (filter_metadata or {}).items()
                     )
                     if match:
                         self.logger.info(f"Deleting doc {doc_id} matching metadata filter {filter_metadata}")

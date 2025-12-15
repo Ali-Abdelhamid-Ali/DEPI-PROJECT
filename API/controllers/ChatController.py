@@ -132,10 +132,11 @@ class ChatController(BaseController):
                 docs = await rag_ctrl.search_documents(user_prompt, top_k=self.utility_params.get('rag_top_k', 3))
                 # Log discovered docs for debugging
                 self.logger.info(f"RAG fetched {len(docs)} docs for user {self.username} - use_rag={self.utility_params.get('use_rag')}")
-                print(f"[ChatController] Retrieved {len(docs)} RAG documents for prompt.")
                 if docs:
+                    print(f"[ChatController] Retrieved {len(docs)} RAG documents for prompt.")
                     ctx_parts = [f"[Doc {i+1}] {d['content']}" for i, d in enumerate(docs)]
                     rag_ctx = "\n".join(ctx_parts)
+                    print(ctx_parts)
                 # Log rag_ctx size and preview for debug
                 try:
                     self.logger.info(f"RAG context length for user {self.username}: {len(rag_ctx)} chars")
