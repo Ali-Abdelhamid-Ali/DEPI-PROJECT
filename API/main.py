@@ -31,6 +31,7 @@ async def startup_event():
 app.include_router(base.base_router)
 app.include_router(chat.chat_router)
 app.include_router(rag.rag_router)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(

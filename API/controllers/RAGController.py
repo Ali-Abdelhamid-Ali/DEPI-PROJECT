@@ -3,12 +3,15 @@ import os
 import logging
 import uuid
 from controllers.BaseController import BaseController
+
 from stores.rag.loaders.DocumentLoader import DocumentLoader
 from stores.rag.TextSplitter import TextSplitter
 from stores.rag.EmbeddingsService import EmbeddingsService
 from stores.rag.VectorStore import VectorStore
 from stores.llm.LLMProviderFactory import LLMProviderFactory
+
 from helpers.history import load_history
+
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda
 
